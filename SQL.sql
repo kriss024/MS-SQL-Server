@@ -1,8 +1,26 @@
-SELECT EOMONTH(GETDATE(), 0), DATEADD(DAY, 1, EOMONTH(GETDATE(), -1)) WHERE 1<2
-SELECT 9.5 AS Original, CAST(9.5 AS INT) AS 'int', CAST(9.5 AS DECIMAL(6, 4)) AS 'decimal' WHERE 1<2;
-SELECT CAST('2017-08-25' AS date) as 'date' WHERE 1<2;
+-- Get the last day of the current month
+-- and the first day of the current month
+SELECT 
+    EOMONTH(GETDATE(), 0), 
+    DATEADD(DAY, 1, EOMONTH(GETDATE(), -1)) 
+WHERE 1 < 2;
 
--- CTE (Common Table Expression)
+
+-- Convert number 9.5 to different numeric data types
+SELECT 
+    9.5 AS Original, 
+    CAST(9.5 AS INT) AS 'int',              -- Convert to integer
+    CAST(9.5 AS DECIMAL(6, 4)) AS 'decimal' -- Convert to decimal number
+WHERE 1 < 2;
+
+
+-- Convert text value to DATE data type
+SELECT 
+    CAST('2017-08-25' AS date) as 'date' 
+WHERE 1 < 2;
+
+
+-- Use a CTE to calculate total sales per customer
 WITH SalesSummary AS (
     SELECT 
         CustomerID,
@@ -10,11 +28,13 @@ WITH SalesSummary AS (
     FROM Sales
     GROUP BY CustomerID
 )
+-- Select only customers who spent more than 1000
 SELECT *
 FROM SalesSummary
 WHERE TotalSpent > 1000;
 
--- Create a temporary table
+
+-- Create a local temporary table with total sales per customer
 SELECT 
     CustomerID,
     SUM(TotalAmount) AS TotalSpent
@@ -22,9 +42,14 @@ INTO #SalesSummary
 FROM Sales
 GROUP BY CustomerID;
 
-SELECT * FROM #SalesSummary WHERE TotalSpent > 1000;
+-- Select data from the local temporary table
+SELECT * 
+FROM #SalesSummary 
+WHERE TotalSpent > 1000;
 
--- Create a global temporary table
+
+-- Create a global temporary table with total sales per customer
+-- Global temporary tables start with ## and can be used by other sessions
 SELECT 
     CustomerID,
     SUM(TotalAmount) AS TotalSpent
@@ -32,27 +57,35 @@ INTO ##SalesSummary
 FROM Sales
 GROUP BY CustomerID;
 
--- Create a sequence
+
+-- Create a sequence for generating numbers
 CREATE SEQUENCE item_counter
-	AS INT
+    AS INT
     START WITH 10
     INCREMENT BY 1;
 
+-- Get the next number from the sequence
 SELECT NEXT VALUE FOR item_counter;
 
 
+-- Create a new database
 CREATE DATABASE testDB;
 
+-- Switch to the new database
 USE testDB;
 
+
+-- Create a table for storing promotion data
 CREATE TABLE dbo.promotions (
-    promotion_id INT PRIMARY KEY IDENTITY (1, 1),
-    promotion_name VARCHAR (255) NOT NULL,
-    discount NUMERIC (3, 2) DEFAULT 0,
-    start_date DATE NOT NULL,
-    expired_date DATE NOT NULL
+    promotion_id INT PRIMARY KEY IDENTITY (1, 1), -- Auto-generated ID
+    promotion_name VARCHAR (255) NOT NULL,        -- Promotion name, required
+    discount NUMERIC (3, 2) DEFAULT 0,            -- Discount value, default is 0
+    start_date DATE NOT NULL,                     -- Promotion start date
+    expired_date DATE NOT NULL                    -- Promotion end date
 ); 
 
+
+-- Insert sample promotion rows into the table
 INSERT INTO dbo.promotions (
     promotion_name,
     discount,
@@ -80,29 +113,30 @@ VALUES
     );
 
 
+-- Select promotion data
+-- Skip the first row and return only the next one row
 SELECT
-	promotion_id,
-    	promotion_name,
-	discount
+    promotion_id,
+    promotion_name,
+    discount
 FROM
-	dbo.promotions
+    dbo.promotions
 ORDER BY
-	promotion_id
+    promotion_id
 OFFSET 1 ROWS 
 FETCH NEXT 1 ROWS ONLY;
 
--- GO = Is a batch separator. It tells to SQL Server "stop here and execute all the previous code before moving on". 
--- Is not mandatory but there is a feature for you: if you write GO 10, GO 100, GO 1000 it will execute the same batch of code 10, 100, 1000 times
 
--- Switch to the desired database 
+-- GO is a batch separator
+-- It tells SQL Server to run all previous commands before continuing
+-- Example: GO 10 runs the previous batch 10 times
+
+-- Switch to the selected database
 USE SampleDatabase;
 GO
 
--- Declare a variable
-DECLARE @CurrentDate DATETIME;
-SET @CurrentDate = GETDATE();
 
--- Create a temporary table
+-- Create a local temporary table
 CREATE TABLE #TempSalesData (
     ProductID INT,
     QuantitySold INT,
@@ -110,17 +144,26 @@ CREATE TABLE #TempSalesData (
 );
 GO
 
+
+-- Declare a variable with the current date and time
+DECLARE @CurrentDate DATETIME;
+SET @CurrentDate = GETDATE();
+
 -- Insert sample data into the temporary table
 INSERT INTO #TempSalesData (ProductID, QuantitySold, SaleDate)
-VALUES (1, 100, @CurrentDate),
-       (2, 150, @CurrentDate),
-       (3, 200, @CurrentDate);
+VALUES 
+    (1, 100, @CurrentDate),
+    (2, 150, @CurrentDate),
+    (3, 200, @CurrentDate);
 GO
+
 
 -- Select data from the temporary table
-SELECT * FROM #TempSalesData;
+SELECT * 
+FROM #TempSalesData;
 GO
 
--- Clean up: Drop the temporary table
+
+-- Drop the temporary table when it is no longer needed
 DROP TABLE #TempSalesData;
 GO
